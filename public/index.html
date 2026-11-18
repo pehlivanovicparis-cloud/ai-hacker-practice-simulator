@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Hacker Practice Simulator</title>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>AI Hacker Practice Simulator</h1>
+    <p class="sub">Five playable red-team training scenarios · prompt journal · portfolio</p>
+  </div>
+  <div class="top-actions">
+    <button id="exportBtn" type="button">Export report</button>
+    <span id="saveState" class="save-state" aria-live="polite"></span>
+  </div>
+</header>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button id="tab-scenarios" role="tab" aria-selected="true" type="button">Scenarios</button>
+  <button id="tab-journal" role="tab" aria-selected="false" type="button">Prompt Journal <span id="journalCount" class="count"></span></button>
+  <button id="tab-portfolio" role="tab" aria-selected="false" type="button">Portfolio <span id="writeupCount" class="count"></span></button>
+</nav>
+
+<main>
+  <!-- Scenarios -->
+  <section id="panel-scenarios" role="tabpanel" aria-labelledby="tab-scenarios">
+    <div class="layout">
+      <aside class="scenario-list" id="scenarioList" aria-label="Scenarios"></aside>
+      <div class="scenario-detail" id="scenarioDetail">
+        <p class="empty-note">Select a scenario to begin.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Journal -->
+  <section id="panel-journal" role="tabpanel" aria-labelledby="tab-journal" hidden>
+    <h2>Prompt Journal</h2>
+    <p class="hint-text">Log the prompts you tried, classified on the Arcanum axes (intent, technique, evasion, input channel) with the result you observed.</p>
+    <form id="journalForm" class="card">
+      <div class="field"><label for="jPrompt">Prompt *</label><textarea id="jPrompt" rows="2" maxlength="2000" required placeholder="The exact prompt you sent"></textarea></div>
+      <div class="field-row">
+        <div class="field"><label for="jIntent">Intent *</label><input id="jIntent" maxlength="60" required placeholder="e.g. Tool discovery"></div>
+        <div class="field"><label for="jTechnique">Technique *</label><input id="jTechnique" maxlength="60" required placeholder="e.g. Direct request"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="jEvasion">Evasion</label><input id="jEvasion" maxlength="60" placeholder="None"></div>
+        <div class="field"><label for="jChannel">Input channel</label><input id="jChannel" maxlength="60" placeholder="User Chat"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label for="jScenario">Scenario</label><select id="jScenario"><option value="">— none —</option></select></div>
+        <div class="field"><label for="jResult">Result</label>
+          <select id="jResult">
+            <option value="untested">untested</option>
+            <option value="worked">worked</option>
+            <option value="blocked">blocked</option>
+            <option value="partial">partial</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label for="jNotes">Notes</label><textarea id="jNotes" rows="2" maxlength="2000" placeholder="What happened, and what it tells you"></textarea></div>
+      <button type="submit">Add journal entry</button>
+      <p class="form-error" id="journalError" role="alert" hidden></p>
+    </form>
+    <div id="journalList" class="entries"></div>
+  </section>
+
+  <!-- Portfolio -->
+  <section id="panel-portfolio" role="tabpanel" aria-labelledby="tab-portfolio" hidden>
+    <h2>Portfolio</h2>
+    <p class="hint-text">Writeups are your training record. Generate one from a solved scenario's transcript, or write one by hand.</p>
+    <form id="writeupForm" class="card">
+      <div class="field"><label for="wTitle">Title *</label><input id="wTitle" maxlength="200" required placeholder="Writeup title"></div>
+      <div class="field"><label for="wOwasp">Classification</label><input id="wOwasp" maxlength="120" placeholder="e.g. LLM06 Excessive Agency"></div>
+      <div class="field"><label for="wBody">Body</label><textarea id="wBody" rows="6" placeholder="Attack path, root cause, fix…"></textarea></div>
+      <button type="submit">Create writeup</button>
+      <p class="form-error" id="writeupError" role="alert" hidden></p>
+    </form>
+    <div id="writeupList" class="entries"></div>
+  </section>
+</main>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>

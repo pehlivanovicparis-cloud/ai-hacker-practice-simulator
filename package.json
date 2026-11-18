@@ -1,0 +1,1 @@
+{"description":"AI Hacker Practice Simulator — playable red-team training scenarios with prompt journal and portfolio. Proprietary work of Paris Pehlivanovic.","license":"UNLICENSED","main":"server.js","name":"ai-hacker-practice-simulator","private":true,"scripts":{"start":"node server.js"},"version":"1.0.0"}
