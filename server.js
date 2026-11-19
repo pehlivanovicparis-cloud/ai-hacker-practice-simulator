@@ -29,30 +29,38 @@ const WRITEUP_EXISTS_MESSAGE =
 
 // ---------------------------------------------------------------- state ----
 
-function loadState() {
-  if (!fs.existsSync(DATA_PATH)) {
-    const seed = JSON.parse(fs.readFileSync(SEED_PATH, 'utf8'));
-    saveStateSync(seed);
-    return seed;
-  }
-  return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+// Store: file-backed locally (data/data.json, created from seed on first
+// run — identical to the original behaviour), Vercel KV-backed when
+// KV_REST_API_URL + KV_REST_API_TOKEN are set. See lib/store.js.
+const { createStore } = require('./lib/store');
+const store = createStore({
+  key: 'simulator:state',
+  seedPath: SEED_PATH,
+  dataPath: DATA_PATH,
+});
+
+// In-memory state. File mode: loaded once, like the original server.
+// KV mode: reloaded fresh from KV on every request (a serverless
+// invocation must never trust a warm in-memory copy).
+let state = null;
+
+async function ensureState() {
+  if (state === null || store.useKv) state = await store.load();
+  return state;
 }
 
-function saveStateSync(state) {
-  const tmp = DATA_PATH + '.tmp-' + process.pid + '-' + Date.now();
-  fs.writeFileSync(tmp, JSON.stringify(state, null, 2) + '\n', 'utf8');
-  fs.renameSync(tmp, DATA_PATH);
+// Same save semantics as before: every mutation commits.
+async function saveState(s) {
+  await store.save(s);
 }
-
-let state = loadState();
 
 // Serialize every mutation so concurrent requests cannot interleave writes.
 // Each mutator runs against the single in-memory state, then commits atomically.
 let writeQueue = Promise.resolve();
 function mutate(fn) {
-  const run = writeQueue.then(() => {
+  const run = writeQueue.then(async () => {
     const result = fn(state);
-    saveStateSync(state);
+    await saveState(state);
     return result;
   });
   // Keep the queue alive even if one mutation throws.
@@ -419,8 +427,11 @@ const MIME = {
   '.ico': 'image/x-icon',
 };
 
-const server = http.createServer(async (req, res) => {
+// The request handler is exported so Vercel can run it serverless
+// (api/index.js). `node server.js` still starts the standalone server.
+async function handler(req, res) {
   try {
+    await ensureState();
     const url = new URL(req.url, 'http://localhost');
     const pathname = url.pathname;
 
@@ -748,8 +759,13 @@ const server = http.createServer(async (req, res) => {
     console.error(err);
     if (!res.headersSent) sendError(res, 500, 'Internal server error.');
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log('AI Hacker Practice Simulator listening on http://localhost:' + PORT);
-});
+module.exports = handler;
+
+if (require.main === module) {
+  const server = http.createServer(handler);
+  server.listen(PORT, () => {
+    console.log('AI Hacker Practice Simulator listening on http://localhost:' + PORT);
+  });
+}
